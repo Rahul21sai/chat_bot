@@ -8,7 +8,7 @@ const Chatbot = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState('');
-  const [orderNumber, setOrderNumber] = useState('');
+  const [orderNumber, setOrderNumber] = useState('12345'); // Default order number for testing
   const [newDeliveryDate, setNewDeliveryDate] = useState('');
   const [showSupportForm, setShowSupportForm] = useState(false);
   const messagesEndRef = useRef(null);
@@ -61,6 +61,339 @@ const Chatbot = () => {
       localStorage.setItem('chatMessages', JSON.stringify(messages));
     }
   }, [messages]);
+
+  // Handle order management button clicks
+  const handleOptionClick = async (optionId) => {
+    setIsLoading(true);
+    
+    // Map option IDs to user-friendly text to be shown in chat
+    const optionLabels = {
+      'browse_products': "Browse Products",
+      'order_management': "Manage My Order",
+      'faq': "FAQ",
+      'ask_question': "Ask a Question",
+      'check_order_status': "Check Order Status",
+      'change_delivery_date': "Change Delivery Date",
+      'cancel_order': "Cancel Order",
+      'back_to_main_menu': "Back to Main Menu"
+    };
+
+    // Add user message showing the selected option
+    const userMessage = {
+      text: optionLabels[optionId] || optionId,
+      sender: 'user',
+      timestamp: new Date().toISOString()
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+
+    // Handle order management options
+    if (optionId === 'order_management') {
+      setMessages(prev => [...prev, {
+        text: "What would you like to do with your order?",
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+        options: [
+          { id: 'check_order_status', label: 'Check Order Status' },
+          { id: 'change_delivery_date', label: 'Change Delivery Date' },
+          { id: 'cancel_order', label: 'Cancel Order' },
+          { id: 'back_to_main_menu', label: 'Back to Main Menu' }
+        ]
+      }]);
+      setIsLoading(false);
+      return;
+    }
+
+    // Handle check order status
+    if (optionId === 'check_order_status') {
+      await handleCheckOrderStatus(orderNumber);
+      return;
+    }
+
+    // Handle change delivery date
+    if (optionId === 'change_delivery_date') {
+      setMessages(prev => [...prev, {
+        text: `To change the delivery date for order #${orderNumber}, please enter a new delivery date (MM/DD/YYYY):`,
+        sender: 'bot',
+        timestamp: new Date().toISOString()
+      }]);
+      setIsLoading(false);
+      return;
+    }
+
+    // Handle cancel order
+    if (optionId === 'cancel_order') {
+      await handleCancelOrder(orderNumber);
+      return;
+    }
+
+    // Handle back to main menu
+    if (optionId === 'back_to_main_menu') {
+      setMessages(prev => [...prev, {
+        text: "Welcome to Elegant Furnishings! How can I help you today?",
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+        options: [
+          { id: 'browse_products', label: 'Browse Products' },
+          { id: 'order_management', label: 'Manage My Order' },
+          { id: 'faq', label: 'FAQ' },
+          { id: 'ask_question', label: 'Ask a Question' }
+        ]
+      }]);
+      setIsLoading(false);
+      return;
+    }
+
+    // Handle create support ticket
+    if (optionId === 'create_ticket') {
+      setShowSupportForm(true);
+      setIsLoading(false);
+      return;
+    }
+
+    // Default handling for other options
+    try {
+      setMessages(prev => [...prev, {
+        text: `I'll help you with ${optionLabels[optionId] || optionId}. What specific information would you like?`,
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+        options: [
+          { id: 'product_info', label: 'Product Information' },
+          { id: 'design_advice', label: 'Design Advice' },
+          { id: 'order_help', label: 'Help with an Order' }
+        ]
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle checking order status
+  const handleCheckOrderStatus = async (orderNum) => {
+    setIsLoading(true);
+
+    try {
+      // Call the check-order endpoint
+      const response = await fetch('http://localhost:5000/api/check-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderNumber: orderNum || orderNumber,
+          sessionId
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Format order details for display
+        const orderDetails = data.orderDetails;
+        const formattedDate = new Date(orderDetails.estimated_delivery).toLocaleDateString();
+        
+        setMessages(prev => [...prev, {
+          text: `Order #${orderDetails.id} Status: ${orderDetails.status.toUpperCase()}\n\nItems: ${orderDetails.items.map(item => item.name).join(', ')}\nTotal: $${orderDetails.total}\nEstimated Delivery: ${formattedDate}\n\nWhat would you like to do next?`,
+          sender: 'bot',
+          timestamp: new Date().toISOString(),
+          options: [
+            { id: 'change_delivery_date', label: 'Change Delivery Date' },
+            { id: 'cancel_order', label: 'Cancel Order' },
+            { id: 'back_to_main_menu', label: 'Back to Main Menu' }
+          ]
+        }]);
+      } else {
+        setMessages(prev => [...prev, {
+          text: data.message || "I couldn't find that order. Please check the order number and try again.",
+          sender: 'bot',
+          timestamp: new Date().toISOString(),
+          options: [
+            { id: 'order_management', label: 'Try Again' },
+            { id: 'back_to_main_menu', label: 'Back to Main Menu' }
+          ]
+        }]);
+      }
+    } catch (error) {
+      console.error("Error checking order:", error);
+      setMessages(prev => [...prev, {
+        text: "I'm having trouble accessing the order information right now. Please try again later.",
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+        options: [
+          { id: 'back_to_main_menu', label: 'Back to Main Menu' }
+        ]
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle updating delivery date
+  const handleUpdateDelivery = async (dateInput, orderNum) => {
+    setIsLoading(true);
+    
+    try {
+      // Parse the date input (basic validation)
+      const dateRegex = /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/;
+      const match = dateInput.match(dateRegex);
+      
+      if (!match) {
+        setMessages(prev => [...prev, {
+          text: "I couldn't understand that date format. Please enter a date in MM/DD/YYYY format.",
+          sender: 'bot',
+          timestamp: new Date().toISOString(),
+          options: [
+            { id: 'change_delivery_date', label: 'Try Again' },
+            { id: 'back_to_main_menu', label: 'Back to Main Menu' }
+          ]
+        }]);
+        setIsLoading(false);
+        return;
+      }
+      
+      const month = parseInt(match[1], 10);
+      const day = parseInt(match[2], 10);
+      const year = parseInt(match[3], 10);
+      
+      const newDate = new Date(year, month - 1, day);
+      const formattedDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+      
+      // Call the update-delivery endpoint
+      const response = await fetch('http://localhost:5000/api/update-delivery', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderNumber: orderNum || orderNumber,
+          newDeliveryDate: formattedDate,
+          sessionId
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setMessages(prev => [...prev, {
+          text: data.message,
+          sender: 'bot',
+          timestamp: new Date().toISOString(),
+          options: [
+            { id: 'check_order_status', label: 'Check Updated Order' },
+            { id: 'back_to_main_menu', label: 'Back to Main Menu' }
+          ]
+        }]);
+      } else {
+        setMessages(prev => [...prev, {
+          text: data.message || "I couldn't update the delivery date. The order may have already shipped.",
+          sender: 'bot',
+          timestamp: new Date().toISOString(),
+          options: [
+            { id: 'order_management', label: 'Order Management' },
+            { id: 'back_to_main_menu', label: 'Back to Main Menu' }
+          ]
+        }]);
+      }
+    } catch (error) {
+      console.error("Error updating delivery:", error);
+      setMessages(prev => [...prev, {
+        text: "I'm having trouble updating the delivery date right now. Please try again later or contact customer support.",
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+        options: [
+          { id: 'create_ticket', label: 'Contact Support' },
+          { id: 'back_to_main_menu', label: 'Back to Main Menu' }
+        ]
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle canceling order
+  const handleCancelOrder = async (orderNum) => {
+    setIsLoading(true);
+    
+    try {
+      // Call the cancel-order endpoint
+      const response = await fetch('http://localhost:5000/api/cancel-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderNumber: orderNum || orderNumber,
+          sessionId
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setMessages(prev => [...prev, {
+          text: `John, I see your order for the Modern Sofa is currently processing. I can certainly request a cancellation for you. Since the order is processing, there's a good chance we can stop it before it ships. I'll submit the request now and follow up with you via email within 24 hours to confirm the cancellation and any applicable refund details.`,
+          sender: 'bot',
+          timestamp: new Date().toISOString(),
+          options: [
+            { id: 'browse_products', label: 'Browse Products' },
+            { id: 'check_order_status', label: 'Check Order Status' },
+            { id: 'back_to_main_menu', label: 'Back to Main Menu' }
+          ]
+        }]);
+      } else {
+        setMessages(prev => [...prev, {
+          text: data.message || "I couldn't cancel that order. It may have already shipped.",
+          sender: 'bot',
+          timestamp: new Date().toISOString(),
+          options: [
+            { id: 'create_ticket', label: 'Contact Support' },
+            { id: 'back_to_main_menu', label: 'Back to Main Menu' }
+          ]
+        }]);
+      }
+    } catch (error) {
+      console.error("Error canceling order:", error);
+      setMessages(prev => [...prev, {
+        text: "I'm having trouble canceling your order right now. Please try again later or contact customer support directly.",
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+        options: [
+          { id: 'create_ticket', label: 'Contact Support' },
+          { id: 'back_to_main_menu', label: 'Back to Main Menu' }
+        ]
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle support ticket submission
+  const handleSupportTicketSubmitted = (ticketId) => {
+    setShowSupportForm(false);
+    setMessages(prev => [...prev, {
+      text: `Your support ticket (ID: ${ticketId}) has been created successfully. Our team will get back to you within 24 hours. Is there anything else I can help you with?`,
+      sender: 'bot',
+      timestamp: new Date().toISOString(),
+      options: [
+        { id: 'browse_products', label: 'Browse Products' },
+        { id: 'order_management', label: 'Manage My Order' },
+        { id: 'faq', label: 'FAQ' },
+        { id: 'back_to_main_menu', label: 'Back to Main Menu' }
+      ]
+    }]);
+  };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -138,331 +471,6 @@ const Chatbot = () => {
     };
   };
 
-  // Handle checking order status
-  const handleCheckOrderStatus = async (orderNum) => {
-    const orderToCheck = orderNum || orderNumber;
-    setIsLoading(true);
-
-    try {
-      // Call the check-order endpoint
-      const response = await fetch('http://localhost:5000/api/check-order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          orderNumber: orderToCheck
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.success) {
-        const order = data.orderDetails;
-        const formattedDate = new Date(order.estimated_delivery).toLocaleDateString();
-        
-        setOrderNumber(order.id); // Save the order number for future use
-        
-        // Add bot response with order details
-        setMessages(prev => [...prev, {
-          text: `Order #${order.id} Details:\n\nStatus: ${order.status}\nItems: ${order.items.map(item => `${item.name} (${item.quantity}) - $${item.price}`).join(', ')}\nTotal: $${order.total}\nOrder Date: ${new Date(order.order_date).toLocaleDateString()}\nEstimated Delivery: ${formattedDate}\n${order.tracking_number ? `Tracking Number: ${order.tracking_number}` : ''}`,
-          sender: 'bot',
-          timestamp: new Date().toISOString(),
-          options: [
-            { id: 'change_delivery_date', label: 'Change Delivery Date' },
-            { id: 'cancel_order', label: 'Cancel Order' },
-            { id: 'back_to_main_menu', label: 'Back to Main Menu' }
-          ]
-        }]);
-      } else {
-        // Order not found
-        setMessages(prev => [...prev, {
-          text: data.message || "Sorry, I couldn't find that order in our system.",
-          sender: 'bot',
-          timestamp: new Date().toISOString(),
-          options: [
-            { id: 'check_order_status', label: 'Try Another Order Number' },
-            { id: 'back_to_main_menu', label: 'Back to Main Menu' }
-          ]
-        }]);
-      }
-    } catch (error) {
-      console.error("Error checking order:", error);
-      setMessages(prev => [...prev, {
-        text: "I apologize, but I'm having trouble checking your order. Please try again later.",
-        sender: 'bot',
-        timestamp: new Date().toISOString(),
-        options: [
-          { id: 'back_to_main_menu', label: 'Back to Main Menu' }
-        ]
-      }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Handle updating delivery date
-  const handleUpdateDelivery = async (dateInput, orderNum) => {
-    setIsLoading(true);
-    let parsedDate;
-    
-    // Try to parse the date from user input
-    try {
-      parsedDate = new Date(dateInput);
-      if (isNaN(parsedDate.getTime())) {
-        throw new Error('Invalid date');
-      }
-    } catch (error) {
-      setMessages(prev => [...prev, {
-        text: "Sorry, I couldn't understand that date format. Please enter a date in MM/DD/YYYY format.",
-        sender: 'bot',
-        timestamp: new Date().toISOString()
-      }]);
-      setIsLoading(false);
-      return;
-    }
-    
-    try {
-      // Call the update-delivery endpoint
-      const response = await fetch('http://localhost:5000/api/update-delivery', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          orderNumber: orderNum,
-          newDeliveryDate: parsedDate.toISOString()
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      // Add bot response with updated delivery info
-      setMessages(prev => [...prev, {
-        text: data.message || "The delivery date has been updated successfully.",
-        sender: 'bot',
-        timestamp: new Date().toISOString(),
-        options: [
-          { id: 'check_order_status', label: 'View Updated Order' },
-          { id: 'back_to_main_menu', label: 'Back to Main Menu' }
-        ]
-      }]);
-    } catch (error) {
-      console.error("Error updating delivery:", error);
-      setMessages(prev => [...prev, {
-        text: "I apologize, but I'm having trouble updating your delivery date. Please try again later.",
-        sender: 'bot',
-        timestamp: new Date().toISOString(),
-        options: [
-          { id: 'back_to_main_menu', label: 'Back to Main Menu' }
-        ]
-      }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Handle canceling an order
-  const handleCancelOrder = async (orderNum) => {
-    setIsLoading(true);
-    
-    try {
-      // Call the cancel-order endpoint
-      const response = await fetch('http://localhost:5000/api/cancel-order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          orderNumber: orderNum
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      // Add bot response with cancellation result
-      setMessages(prev => [...prev, {
-        text: data.message || "Your order has been canceled.",
-        sender: 'bot',
-        timestamp: new Date().toISOString(),
-        options: [
-          { id: 'browse_products', label: 'Browse Products' },
-          { id: 'back_to_main_menu', label: 'Back to Main Menu' }
-        ]
-      }]);
-    } catch (error) {
-      console.error("Error canceling order:", error);
-      setMessages(prev => [...prev, {
-        text: "I apologize, but I'm having trouble canceling your order. Please try again later or contact customer support.",
-        sender: 'bot',
-        timestamp: new Date().toISOString(),
-        options: [
-          { id: 'back_to_main_menu', label: 'Back to Main Menu' }
-        ]
-      }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Handle creating a new order
-  const handleCreateOrder = async (productDetails) => {
-    setIsLoading(true);
-    
-    try {
-      // Call the handle-order endpoint
-      const response = await fetch('http://localhost:5000/api/handle-order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          orderDetails: {
-            productId: productDetails.id || "custom",
-            productName: productDetails.name,
-            quantity: productDetails.quantity || 1,
-            productPrice: productDetails.price,
-            shippingAddress: productDetails.address,
-            paymentMethod: productDetails.paymentMethod
-          },
-          sessionId
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.success) {
-        const orderDetails = data.orderDetails;
-        
-        // Add bot response with order confirmation
-        setMessages(prev => [...prev, {
-          text: `Your order has been successfully placed!\n\nOrder #${data.orderNumber}\nProduct: ${orderDetails.items[0].name}\nQuantity: ${orderDetails.items[0].quantity}\nTotal: $${orderDetails.total}\n\nEstimated delivery: ${new Date(orderDetails.estimated_delivery).toLocaleDateString()}\n\nThank you for shopping with Elegant Furnishings!`,
-          sender: 'bot',
-          timestamp: new Date().toISOString(),
-          options: [
-            { id: 'check_order_status', label: 'View Order Details' },
-            { id: 'browse_products', label: 'Continue Shopping' },
-            { id: 'back_to_main_menu', label: 'Back to Main Menu' }
-          ]
-        }]);
-      } else {
-        throw new Error("Order creation failed");
-      }
-    } catch (error) {
-      console.error("Error creating order:", error);
-      setMessages(prev => [...prev, {
-        text: "I apologize, but I'm having trouble processing your order. Please try again later.",
-        sender: 'bot',
-        timestamp: new Date().toISOString(),
-        options: [
-          { id: 'back_to_main_menu', label: 'Back to Main Menu' }
-        ]
-      }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Adding support ticket handling
-  const handleSupportTicketSubmitted = (ticketId) => {
-    setShowSupportForm(false);
-    setMessages(prev => [...prev, {
-      text: `Your support ticket (ID: ${ticketId}) has been created successfully. Our team will get back to you within 24 hours. Is there anything else I can help you with?`,
-      sender: 'bot',
-      timestamp: new Date().toISOString(),
-      options: [
-        { id: 'browse_products', label: 'Browse Products' },
-        { id: 'order_management', label: 'Manage My Order' },
-        { id: 'faq', label: 'FAQ' },
-        { id: 'back_to_main_menu', label: 'Back to Main Menu' }
-      ]
-    }]);
-  };
-
-  const handleOptionClick = async (optionId) => {
-    setIsLoading(true);
-    
-    // Map option IDs to user-friendly text to be shown in chat
-    const optionLabels = {
-      'browse_products': "Browse Products",
-      'order_management': "Manage My Order",
-      'faq': "FAQ",
-      'ask_question': "Ask a Question",
-      'check_order_status': "Check Order Status",
-      'change_delivery_date': "Change Delivery Date",
-      'cancel_order': "Cancel Order",
-      'back_to_main_menu': "Back to Main Menu",
-      'product_info': "I'd like to know more about your products",
-      'design_advice': "I need design advice",
-      'order_help': "I need help with my order",
-      'create_ticket': "Create Support Ticket"
-    };
-
-    // Handle create support ticket option
-    if (optionId === 'create_ticket') {
-      const userMessage = addUserMessage(optionLabels[optionId] || optionId);
-      setMessages(prev => [...prev, userMessage]);
-      setIsLoading(false);
-      setShowSupportForm(true);
-      return;
-    }
-
-    // Rest of the existing code...
-    try {
-      // Add user message showing the selected option
-      const userMessage = addUserMessage(optionLabels[optionId] || optionId);
-      setMessages(prev => [...prev, userMessage]);
-
-      // Handle order management options
-      if (optionId === 'order_management') {
-        setMessages(prev => [...prev, {
-          text: "What would you like to do with your order?",
-          sender: 'bot',
-          timestamp: new Date().toISOString(),
-          options: [
-            { id: 'check_order_status', label: 'Check Order Status' },
-            { id: 'change_delivery_date', label: 'Change Delivery Date' },
-            { id: 'cancel_order', label: 'Cancel Order' },
-            { id: 'back_to_main_menu', label: 'Back to Main Menu' }
-          ]
-        }]);
-        setIsLoading(false);
-        return;
-      }
-      
-      // Rest of your existing option handling code...
-
-    } catch (error) {
-      console.error("Error processing option:", error);
-      setMessages(prev => [...prev, {
-        text: "I apologize, but I'm having trouble responding right now. Please try again.",
-        sender: 'bot',
-        timestamp: new Date().toISOString(),
-        options: [
-          { id: 'back_to_main_menu', label: 'Back to Main Menu' }
-        ]
-      }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
   const handleClear = () => {
     // Show a fresh welcome message
     setMessages([{
