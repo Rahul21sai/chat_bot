@@ -1,0 +1,429 @@
+/* Updated modern styling for the entire site */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #333;
+  background-color: #f8f8f8;
+}
+
+.furniture-site {
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Enhanced Header Styles */
+.site-header {
+  background-color: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: 700;
+  color: #8B4513;
+  letter-spacing: -0.5px;
+}
+
+.search-box {
+  display: flex;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+  max-width: 300px;
+  flex: 1;
+  margin: 0 30px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.search-box input {
+  flex: 1;
+  border: none;
+  padding: 12px 18px;
+  outline: none;
+  font-size: 14px;
+}
+
+.search-button {
+  background-color: #8B4513;
+  color: white;
+  border: none;
+  width: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.search-button:hover {
+  background-color: #6d3609;
+}
+
+/* Improved Main Navigation */
+.main-nav {
+  display: flex;
+  gap: 30px;
+}
+
+.main-nav a {
+  text-decoration: none;
+  color: #555;
+  font-size: 16px;
+  font-weight: 500;
+  transition: color 0.2s;
+  position: relative;
+}
+
+.main-nav a.active,
+.main-nav a:hover {
+  color: #8B4513;
+}
+
+.main-nav a.active::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #8B4513;
+}
+
+/* Enhanced Hero Section */
+.hero {
+  background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('https://images.unsplash.com/photo-1586023492125-27b2c045efd7?q=80&w=1600&auto=format&fit=crop');
+  background-size: cover;
+  background-position: center;
+  height: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: white;
+}
+
+.hero-content {
+  max-width: 800px;
+  padding: 0 20px;
+}
+
+.hero h1 {
+  font-size: 46px;
+  font-weight: 800;
+  margin-bottom: 15px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.hero p {
+  font-size: 18px;
+  margin-bottom: 25px;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.shop-button {
+  background-color: #8B4513;
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.shop-button:hover {
+  background-color: #6d3609;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+}
+
+/* Enhanced Products Layout */
+.products-container {
+  display: flex;
+  max-width: 1200px;
+  margin: 40px auto;
+}
+
+/* Improved Categories Sidebar */
+.categories {
+  padding: 25px;
+  border-right: 1px solid #eee;
+  width: 250px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  margin-right: 20px;
+}
+
+.categories h2 {
+  font-size: 20px;
+  margin-bottom: 20px;
+  font-weight: 600;
+  color: #333;
+}
+
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.category-item {
+  color: #555;
+  padding: 10px 0;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 15px;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.category-item:hover {
+  color: #8B4513;
+  padding-left: 5px;
+}
+
+/* Enhanced Summer Sale Panel */
+.summer-sale {
+  margin-top: 35px;
+  background-color: #FFF8E1;
+  padding: 20px;
+  border-radius: 10px;
+  border-left: 3px solid #8B4513;
+}
+
+.summer-sale h3 {
+  font-size: 18px;
+  color: #8B4513;
+  margin-bottom: 10px;
+}
+
+.summer-sale p {
+  font-size: 14px;
+  margin-bottom: 15px;
+  color: #666;
+}
+
+.view-deals-button {
+  background-color: #8B4513;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.view-deals-button:hover {
+  background-color: #6d3609;
+  transform: translateY(-2px);
+}
+
+/* Improved Main Content */
+.main-content {
+  flex: 1;
+}
+
+.products {
+  padding: 10px 0;
+}
+
+.products h2 {
+  font-size: 24px;
+  margin-bottom: 25px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Enhanced Product Grid */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 25px;
+}
+
+/* Improved Product Cards */
+.product-card {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.product-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.product-image {
+  height: 220px;
+  overflow: hidden;
+  position: relative;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s;
+}
+
+.product-card:hover .product-image img {
+  transform: scale(1.08);
+}
+
+.product-card h3 {
+  padding: 18px 18px 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.price {
+  padding: 0 18px 15px;
+  color: #8B4513;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.view-details {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  background-color: #8B4513;
+  color: white;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.view-details:hover {
+  background-color: #6d3609;
+}
+
+/* ENLARGED CHATBOT - 30% of screen size as requested */
+.chat-widget-container {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 30vw; /* 30% of viewport width */
+  height: 70vh; /* 70% of viewport height for good proportion */
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-widget-header {
+  background-color: #8B4513;
+  color: white;
+  padding: 15px 20px;
+  font-weight: 600;
+  font-size: 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.close-chat-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 22px;
+  cursor: pointer;
+  height: 30px;
+  width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.close-chat-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.chat-widget-button {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #8B4513;
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  transition: transform 0.3s, background-color 0.2s;
+}
+
+.chat-widget-button:hover {
+  transform: scale(1.1);
+  background-color: #6d3609;
+}
+
+/* Cart Icon */
+.cart-icon {
+  position: relative;
+  cursor: pointer;
+  margin-left: 20px;
+}
+
+.cart-count {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background-color: #8B4513;
+  color: white;
+  font-size: 12px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Updated Message Styling */
+.bot-message .message-avatar {
+  background-color: #8B4513;
+}
+
+.user-message .message-bubble {
+  background-color: #4a89dc;
+  color: white;
+  border-bottom-right-radius: 4px;
+}
