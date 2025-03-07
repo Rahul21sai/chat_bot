@@ -35,6 +35,50 @@ let vectorStore;
 // Store chat history by session ID
 const chatSessions = {};
 
+// Sample order data for testing and development
+const orderData = [
+  {
+    id: '12345',
+    customer: 'John Smith',
+    items: [
+      { id: 'p001', name: 'Modern Sofa', price: 899, quantity: 1 }
+    ],
+    total: 899,
+    status: 'processing',
+    orderDate: '2023-04-15',
+    deliveryDate: '2023-04-30',
+    shippingAddress: '123 Main St, Anytown, USA',
+    paymentMethod: 'credit_card'
+  },
+  {
+    id: '12346',
+    customer: 'Jane Doe',
+    items: [
+      { id: 'p002', name: 'Queen Storage Bed', price: 749, quantity: 1 },
+      { id: 'p007', name: 'Bedside Table', price: 199, quantity: 2 }
+    ],
+    total: 1147,
+    status: 'shipped',
+    orderDate: '2023-04-12',
+    deliveryDate: '2023-04-24',
+    shippingAddress: '456 Oak Ave, Somewhere, USA',
+    paymentMethod: 'paypal'
+  },
+  {
+    id: '12347',
+    customer: 'Robert Johnson',
+    items: [
+      { id: 'p003', name: 'Dining Table Set', price: 1299, quantity: 1 }
+    ],
+    total: 1299,
+    status: 'delivered',
+    orderDate: '2023-03-28',
+    deliveryDate: '2023-04-10',
+    shippingAddress: '789 Pine Rd, Nowhere, USA',
+    paymentMethod: 'credit_card'
+  }
+];
+
 // Function to format documents as string
 function formatDocsAsString(docs) {
   return docs.map(doc => doc.pageContent).join('\n\n');

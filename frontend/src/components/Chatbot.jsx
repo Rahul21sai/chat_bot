@@ -62,6 +62,74 @@ const Chatbot = () => {
     }
   }, [messages]);
 
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+
+    const userMessage = {
+      text: input,
+      sender: 'user',
+      timestamp: new Date().toISOString()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setIsLoading(true);
+
+    // Check if the message contains an order number
+    const orderNumberMatch = input.match(/order\s*#?\s*(\d{5,6})/i);
+    if (orderNumberMatch && messages.some(msg => msg.text.includes("Please enter your order number"))) {
+      await handleCheckOrderStatus(orderNumberMatch[1]);
+      return;
+    }
+
+    // Check if the message contains a date for updating delivery
+    if (messages.some(msg => msg.text.includes("enter a new delivery date"))) {
+      await handleUpdateDelivery(input, orderNumber);
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5000/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: input,
+          sessionId,
+          chatHistory: messages
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      setMessages(prev => [...prev, {
+        text: data.response,
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+        options: [
+          { id: 'product_info', label: 'Product Information' },
+          { id: 'design_advice', label: 'Design Advice' },
+          { id: 'order_help', label: 'Help with an Order' }
+        ]
+      }]);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      setMessages(prev => [...prev, {
+        text: "I apologize, but I'm having trouble connecting to the server. Please try again.",
+        sender: 'bot',
+        timestamp: new Date().toISOString()
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Handle order management button clicks
   const handleOptionClick = async (optionId) => {
     setIsLoading(true);
@@ -75,7 +143,11 @@ const Chatbot = () => {
       'check_order_status': "Check Order Status",
       'change_delivery_date': "Change Delivery Date",
       'cancel_order': "Cancel Order",
-      'back_to_main_menu': "Back to Main Menu"
+      'back_to_main_menu': "Back to Main Menu",
+      'living_room': "Living Room",
+      'bedroom': "Bedroom",
+      'dining_room': "Dining Room",
+      'office': "Office"
     };
 
     // Add user message showing the selected option
@@ -86,6 +158,243 @@ const Chatbot = () => {
     };
     
     setMessages(prev => [...prev, userMessage]);
+
+    // Handle browse products
+    if (optionId === 'browse_products') {
+      setMessages(prev => [...prev, {
+        text: "We have a wide range of furniture for every room. What type of furniture are you looking for?",
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+        options: [
+          { id: 'living_room', label: 'Living Room' },
+          { id: 'bedroom', label: 'Bedroom' },
+          { id: 'dining_room', label: 'Dining Room' },
+          { id: 'office', label: 'Office' }
+        ]
+      }]);
+      setIsLoading(false);
+      return;
+    }
+
+    // Handle room categories
+    if (optionId === 'living_room') {
+      setMessages(prev => [...prev, {
+        text: "Here are our living room furniture options:",
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+        options: [
+          { id: 'modern_sofa', label: 'Modern Sofa - $899' },
+          { id: 'coffee_table', label: 'Coffee Table - $349' },
+          { id: 'accent_chair', label: 'Accent Chair - $349' },
+          { id: 'tv_stand', label: 'TV Stand - $499' },
+          { id: 'back_to_categories', label: 'Back to Categories' }
+        ]
+      }]);
+      setIsLoading(false);
+      return;
+    }
+
+    if (optionId === 'bedroom') {
+      setMessages(prev => [...prev, {
+        text: "Here are our bedroom furniture options:",
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+        options: [
+          { id: 'queen_storage_bed', label: 'Queen Storage Bed - $749' },
+          { id: 'king_bed', label: 'King Size Bed - $899' },
+          { id: 'dresser', label: 'Dresser with Mirror - $599' },
+          { id: 'nightstand', label: 'Bedside Table - $199' },
+          { id: 'wardrobe', label: 'Wardrobe - $899' },
+          { id: 'back_to_categories', label: 'Back to Categories' }
+        ]
+      }]);
+      setIsLoading(false);
+      return;
+    }
+
+    if (optionId === 'dining_room') {
+      setMessages(prev => [...prev, {
+        text: "Here are our dining room furniture options:",
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+        options: [
+          { id: 'dining_table', label: 'Dining Table Set - $1299' },
+          { id: 'buffet', label: 'Buffet Cabinet - $799' },
+          { id: 'bar_stools', label: 'Bar Stools (Set of 2) - $349' },
+          { id: 'china_cabinet', label: 'China Cabinet - $899' },
+          { id: 'back_to_categories', label: 'Back to Categories' }
+        ]
+      }]);
+      setIsLoading(false);
+      return;
+    }
+
+    if (optionId === 'office') {
+      setMessages(prev => [...prev, {
+        text: "Here are our office furniture options:",
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+        options: [
+          { id: 'executive_desk', label: 'Executive Desk - $499' },
+          { id: 'office_chair', label: 'Ergonomic Office Chair - $329' },
+          { id: 'bookshelf', label: 'Bookshelf - $249' },
+          { id: 'filing_cabinet', label: 'Filing Cabinet - $199' },
+          { id: 'back_to_categories', label: 'Back to Categories' }
+        ]
+      }]);
+      setIsLoading(false);
+      return;
+    }
+
+    if (optionId === 'back_to_categories') {
+      setMessages(prev => [...prev, {
+        text: "What type of furniture are you looking for?",
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+        options: [
+          { id: 'living_room', label: 'Living Room' },
+          { id: 'bedroom', label: 'Bedroom' },
+          { id: 'dining_room', label: 'Dining Room' },
+          { id: 'office', label: 'Office' },
+          { id: 'back_to_main_menu', label: 'Back to Main Menu' }
+        ]
+      }]);
+      setIsLoading(false);
+      return;
+    }
+
+    // Handle specific product selection
+    if (['modern_sofa', 'queen_storage_bed', 'dining_table', 'executive_desk'].includes(optionId)) {
+      const productDetails = {
+        'modern_sofa': {
+          name: 'Modern Sofa',
+          price: '$899',
+          description: 'Elegant modern sofa with high-density foam cushions and durable fabric upholstery.',
+          features: ['Stain-resistant fabric', 'Solid wood frame', '5-year warranty', 'Multiple color options'],
+          availability: 'In stock',
+          dimensions: '84W x 38D x 34H inches'
+        },
+        'queen_storage_bed': {
+          name: 'Queen Storage Bed',
+          price: '$749',
+          description: 'Queen-sized bed with 4 spacious storage drawers in the base.',
+          features: ['Solid wood construction', 'Easy-glide drawers', 'Fits standard queen mattress', 'No box spring needed'],
+          availability: 'In stock',
+          dimensions: '65W x 86D x 45H inches'
+        },
+        'dining_table': {
+          name: 'Dining Table Set',
+          price: '$1299',
+          description: '6-piece dining set including table and chairs made from solid oak.',
+          features: ['Solid oak construction', 'Scratch-resistant finish', 'Seats 6 people', 'Easy assembly'],
+          availability: 'Ships in 1-2 weeks',
+          dimensions: '72W x 42D x 30H inches (table)'
+        },
+        'executive_desk': {
+          name: 'Executive Office Desk',
+          price: '$499',
+          description: 'Spacious office desk with cable management and drawer storage.',
+          features: ['Built-in cable organizers', 'Steel frame', 'Multiple drawers', 'Assembly included'],
+          availability: 'In stock',
+          dimensions: '60W x 30D x 29H inches'
+        }
+      };
+      
+      const product = productDetails[optionId];
+      const featuresText = product.features.map(f => `• ${f}`).join('\n');
+      
+      setMessages(prev => [...prev, {
+        text: `**${product.name}** - ${product.price}\n\n${product.description}\n\n**Features:**\n${featuresText}\n\n**Availability:** ${product.availability}\n**Dimensions:** ${product.dimensions}\n\nWould you like to order this item or return to browsing?`,
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+        options: [
+          { id: `order_${optionId}`, label: 'Add to Cart' },
+          { id: 'back_to_categories', label: 'Continue Shopping' },
+          { id: 'back_to_main_menu', label: 'Main Menu' }
+        ]
+      }]);
+      setIsLoading(false);
+      return;
+    }
+
+    // Handle FAQ
+    if (optionId === 'faq') {
+      setMessages(prev => [...prev, {
+        text: "Here are some frequently asked questions. What would you like to know more about?",
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+        options: [
+          { id: 'faq_delivery', label: 'Delivery Information' },
+          { id: 'faq_returns', label: 'Returns & Refunds' },
+          { id: 'faq_warranty', label: 'Warranty Information' },
+          { id: 'faq_payment', label: 'Payment Methods' },
+          { id: 'back_to_main_menu', label: 'Back to Main Menu' }
+        ]
+      }]);
+      setIsLoading(false);
+      return;
+    }
+
+    // Handle specific FAQ answers
+    if (optionId === 'faq_delivery') {
+      setMessages(prev => [...prev, {
+        text: "**Delivery Information**\n\n• Standard delivery takes 5-7 business days\n• Premium delivery with assembly is available for an additional fee\n• We deliver to all 50 states plus select international locations\n• Tracking information is provided via email once your order ships\n• Delivery is free for orders over $999\n\nDo you have other questions about our delivery?",
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+        options: [
+          { id: 'faq', label: 'Back to FAQ' },
+          { id: 'contact_delivery', label: 'Contact Delivery Department' },
+          { id: 'back_to_main_menu', label: 'Back to Main Menu' }
+        ]
+      }]);
+      setIsLoading(false);
+      return;
+    }
+
+    if (optionId === 'faq_returns') {
+      setMessages(prev => [...prev, {
+        text: "**Returns & Refunds Policy**\n\n• You may return most items within 30 days of delivery\n• Items must be in original condition and packaging\n• Custom orders cannot be returned unless damaged\n• Refunds are processed within 7-10 business days\n• Return shipping is free for defective items\n\nDo you need to initiate a return?",
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+        options: [
+          { id: 'faq', label: 'Back to FAQ' },
+          { id: 'start_return', label: 'Start a Return' },
+          { id: 'back_to_main_menu', label: 'Back to Main Menu' }
+        ]
+      }]);
+      setIsLoading(false);
+      return;
+    }
+
+    if (optionId === 'faq_warranty') {
+      setMessages(prev => [...prev, {
+        text: "**Warranty Information**\n\n• All furniture comes with a 1-year limited warranty\n• Select premium items have extended 5-year warranties\n• Warranty covers manufacturing defects and structural issues\n• Normal wear and tear is not covered\n• Keep your receipt/order number for warranty claims\n\nDo you need to file a warranty claim?",
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+        options: [
+          { id: 'faq', label: 'Back to FAQ' },
+          { id: 'warranty_claim', label: 'File Warranty Claim' },
+          { id: 'back_to_main_menu', label: 'Back to Main Menu' }
+        ]
+      }]);
+      setIsLoading(false);
+      return;
+    }
+
+    if (optionId === 'faq_payment') {
+      setMessages(prev => [...prev, {
+        text: "**Payment Methods**\n\n• We accept all major credit cards (Visa, MasterCard, American Express, Discover)\n• PayPal and Apple Pay are available for online purchases\n• Financing options are available for orders over $500\n• Gift cards can be used for partial or full payment\n• All transactions are securely processed\n\nDo you have other payment questions?",
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+        options: [
+          { id: 'faq', label: 'Back to FAQ' },
+          { id: 'financing_info', label: 'Financing Information' },
+          { id: 'back_to_main_menu', label: 'Back to Main Menu' }
+        ]
+      }]);
+      setIsLoading(false);
+      return;
+    }
 
     // Handle order management options
     if (optionId === 'order_management') {
@@ -206,13 +515,16 @@ const Chatbot = () => {
             { id: 'back_to_main_menu', label: 'Back to Main Menu' }
           ]
         }]);
+        
+        setOrderNumber(orderDetails.id);
       } else {
         setMessages(prev => [...prev, {
-          text: data.message || "I couldn't find that order. Please check the order number and try again.",
+          text: data.message || "I couldn't find that order number in our system. Please check the number and try again.",
           sender: 'bot',
           timestamp: new Date().toISOString(),
           options: [
-            { id: 'order_management', label: 'Try Again' },
+            { id: 'check_order_status', label: 'Try Again' },
+            { id: 'contact_support', label: 'Contact Support' },
             { id: 'back_to_main_menu', label: 'Back to Main Menu' }
           ]
         }]);
@@ -220,10 +532,11 @@ const Chatbot = () => {
     } catch (error) {
       console.error("Error checking order:", error);
       setMessages(prev => [...prev, {
-        text: "I'm having trouble accessing the order information right now. Please try again later.",
+        text: "I'm having trouble accessing order information right now. Please try again later or contact customer support directly.",
         sender: 'bot',
         timestamp: new Date().toISOString(),
         options: [
+          { id: 'create_ticket', label: 'Contact Support' },
           { id: 'back_to_main_menu', label: 'Back to Main Menu' }
         ]
       }]);
@@ -395,82 +708,6 @@ const Chatbot = () => {
     }]);
   };
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-
-    const userMessage = {
-      text: input,
-      sender: 'user',
-      timestamp: new Date().toISOString()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
-    setIsLoading(true);
-
-    // Check if the message contains an order number for checking status
-    const orderNumberMatch = input.match(/order\s*#?\s*(\d{5,6})/i);
-    if (orderNumberMatch && messages.some(msg => msg.text.includes("Please enter your order number"))) {
-      await handleCheckOrderStatus(orderNumberMatch[1]);
-      return;
-    }
-
-    // Check if the message contains a date for updating delivery
-    if (messages.some(msg => msg.text.includes("enter a new delivery date"))) {
-      await handleUpdateDelivery(input, orderNumber);
-      return;
-    }
-
-    try {
-      const response = await fetch('http://localhost:5000/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: input,
-          sessionId,
-          chatHistory: messages
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      setMessages(prev => [...prev, {
-        text: data.response,
-        sender: 'bot',
-        timestamp: new Date().toISOString(),
-        options: [
-          { id: 'product_info', label: 'Product Information' },
-          { id: 'design_advice', label: 'Design Advice' },
-          { id: 'order_help', label: 'Help with an Order' }
-        ]
-      }]);
-    } catch (error) {
-      console.error("Error sending message:", error);
-      setMessages(prev => [...prev, {
-        text: "I apologize, but I'm having trouble connecting to the server. Please try again.",
-        sender: 'bot',
-        timestamp: new Date().toISOString()
-      }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const addUserMessage = (text) => {
-    return {
-      text,
-      sender: 'user',
-      timestamp: new Date().toISOString()
-    };
-  };
-
   const handleClear = () => {
     // Show a fresh welcome message
     setMessages([{
@@ -489,7 +726,7 @@ const Chatbot = () => {
     localStorage.removeItem('chatMessages');
     
     // Reset all state
-    setOrderNumber('');
+    setOrderNumber('12345');
     setNewDeliveryDate('');
     setShowSupportForm(false);
   };
