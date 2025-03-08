@@ -21,30 +21,32 @@ const SupportTicket = ({ onClose, onTicketSubmitted, sessionId }) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Generate a ticket ID
-    const newTicketId = generateTicketId();
-    
     // Simulate API call to create ticket
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setTicketCreated(true);
-      setTicketId(newTicketId);
-      
-      // In a real app, you would send this data to your backend
-      const ticketData = {
-        ticketId: newTicketId,
+    fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/support-ticket`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
         name,
         email,
         issue,
         category,
-        sessionId,
-        timestamp: new Date().toISOString(),
-        status: 'open',
-        chatHistory: JSON.parse(localStorage.getItem('chatMessages') || '[]')
-      };
-      
-      console.log('Ticket created:', ticketData);
-    }, 1500);
+        sessionId
+      }),
+    })
+    .then(response => response.json())
+    .then(data => {
+      setIsSubmitting(false);
+      setTicketCreated(true);
+      setTicketId(data.ticketId || generateTicketId());
+    })
+    .catch(error => {
+      console.error("Error creating ticket:", error);
+      setIsSubmitting(false);
+      setTicketCreated(true);
+      setTicketId(generateTicketId()); // Fallback to generating one client-side
+    });
   };
 
   if (ticketCreated) {
