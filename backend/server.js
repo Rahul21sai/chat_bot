@@ -20,7 +20,7 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: ['https://chat-bot-three-blush.vercel.app', 'http://localhost:3000'],
+  origin: 'https://chat-bot-three-blush.vercel.app',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
@@ -724,6 +724,11 @@ app.post('/api/cancel-order', async (req, res) => {
     console.error('Error canceling order:', error);
     res.status(500).json({ error: 'Failed to cancel order' });
   }
+});
+
+// Simple health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Backend is running' });
 });
 
 // Fallback route

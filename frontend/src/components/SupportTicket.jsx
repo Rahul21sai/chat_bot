@@ -21,8 +21,7 @@ const SupportTicket = ({ onClose, onTicketSubmitted, sessionId }) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call to create ticket
-    fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/support-ticket`, {
+    fetch("https://chat-bot-xy4i.onrender.com/api/support-ticket", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

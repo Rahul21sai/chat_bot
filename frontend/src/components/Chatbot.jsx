@@ -62,6 +62,15 @@ const Chatbot = () => {
     }
   }, [messages]);
 
+  // Add this in useEffect to wake up the backend when the component mounts
+  useEffect(() => {
+    // Wake up the backend server if it's sleeping (Render free tier)
+    fetch("https://chat-bot-xy4i.onrender.com/health")
+      .then(response => response.json())
+      .then(data => console.log("Backend status:", data))
+      .catch(error => console.warn("Backend might be starting up:", error));
+  }, []);
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -90,7 +99,7 @@ const Chatbot = () => {
     }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/chat`, {
+      const response = await fetch("https://chat-bot-xy4i.onrender.com/api/chat", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -485,7 +494,7 @@ const Chatbot = () => {
 
     try {
       // Call the check-order endpoint
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/check-order`, {
+      const response = await fetch("https://chat-bot-xy4i.onrender.com/api/check-order", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -578,7 +587,7 @@ const Chatbot = () => {
       const formattedDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
       
       // Call the update-delivery endpoint
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/update-delivery`, {
+      const response = await fetch("https://chat-bot-xy4i.onrender.com/api/update-delivery", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -639,7 +648,7 @@ const Chatbot = () => {
     
     try {
       // Call the cancel-order endpoint
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/cancel-order`, {
+      const response = await fetch("https://chat-bot-xy4i.onrender.com/api/cancel-order", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
