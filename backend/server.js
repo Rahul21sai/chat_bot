@@ -20,7 +20,7 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: ['https://chat-bot-three-blush.vercel.app', 'http://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
@@ -485,13 +485,17 @@ app.post('/api/bot-response', (req, res) => {
 
 app.post('/api/chat', async (req, res) => {
   try {
+    console.log("Received chat request:", req.body);
+    
     if (!vectorStore) {
+      console.log("Initializing vector store...");
       await initializeVectorStore();
     }
 
     const { message, sessionId, chatHistory } = req.body;
     
     if (!message) {
+      console.log("Missing message in request");
       return res.status(400).json({ error: 'Message is required' });
     }
 
@@ -562,7 +566,7 @@ app.post('/api/chat', async (req, res) => {
     }
   } catch (error) {
     console.error('Error processing chat request:', error);
-    res.status(500).json({ error: 'Failed to process request' });
+    res.status(500).json({ error: 'Failed to process request', details: error.message });
   }
 });
 

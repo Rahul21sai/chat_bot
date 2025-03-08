@@ -90,7 +90,7 @@ const Chatbot = () => {
     }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/chat`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -103,7 +103,9 @@ const Chatbot = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json();
+        console.error("Server error:", errorData);
+        throw new Error(`Server error: ${errorData.error || response.status}`);
       }
 
       const data = await response.json();
@@ -121,7 +123,7 @@ const Chatbot = () => {
     } catch (error) {
       console.error("Error sending message:", error);
       setMessages(prev => [...prev, {
-        text: "I apologize, but I'm having trouble connecting to the server. Please try again.",
+        text: `I apologize, but I'm having trouble connecting to the server (${error.message}). Please try again.`,
         sender: 'bot',
         timestamp: new Date().toISOString()
       }]);
