@@ -19,7 +19,11 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.C || 'http://localhost:3000',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
 app.use(express.json());
 
 // Initialize LLM with Gemini instead of OpenAI
@@ -226,7 +230,7 @@ async function initializeVectorStore() {
 // Set up RAG pipeline with chat history
 async function setupRAGChain(sessionId, question) {
   const retriever = vectorStore.asRetriever(4); // Retrieve top 4 chunks
-  
+
   // Get chat history for this session
   const sessionHistory = chatSessions[sessionId] || [];
   const chatHistoryText = formatChatHistoryAsString(sessionHistory.slice(-6)); // Use last 6 messages
@@ -243,7 +247,7 @@ async function setupRAGChain(sessionId, question) {
 
     Previous conversation:
     ${chatHistoryText ? chatHistoryText : "No previous conversation."}
-    
+
     Context: {context}
     
     Question: ${safeQuestion}
@@ -490,7 +494,7 @@ app.post('/api/chat', async (req, res) => {
     if (!message) {
       return res.status(400).json({ error: 'Message is required' });
     }
-    
+
     // Initialize session if it doesn't exist
     if (sessionId && !chatSessions[sessionId]) {
       chatSessions[sessionId] = [];
@@ -533,7 +537,7 @@ app.post('/api/chat', async (req, res) => {
         }
       }
 
-      res.json({ response });
+    res.json({ response });
     } catch (ragError) {
       console.error('Error in primary RAG chain:', ragError);
       // Try the simplified approach

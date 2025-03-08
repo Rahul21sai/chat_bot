@@ -90,7 +90,7 @@ const Chatbot = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/chat', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -483,7 +483,7 @@ const Chatbot = () => {
 
     try {
       // Call the check-order endpoint
-      const response = await fetch('http://localhost:5000/api/check-order', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/check-order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -576,7 +576,7 @@ const Chatbot = () => {
       const formattedDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
       
       // Call the update-delivery endpoint
-      const response = await fetch('http://localhost:5000/api/update-delivery', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/update-delivery`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -637,7 +637,7 @@ const Chatbot = () => {
     
     try {
       // Call the cancel-order endpoint
-      const response = await fetch('http://localhost:5000/api/cancel-order', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/cancel-order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
