@@ -20,7 +20,7 @@ const OrderProcessor = ({ product, onOrderComplete, onCancel }) => {
     setIsProcessing(true);
     
     // Call API to process order
-    fetch('http://localhost:5000/api/handle-order', {
+    fetch('https://chat-bot-xy4i.onrender.com/api/handle-order', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
